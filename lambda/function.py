@@ -101,9 +101,10 @@ def dlm_notification(message, region):
     }
 
 
-def default_notification(subject, message):
+def default_notification(subject, message, color="default"):
     return {
         "fallback": "A new message",
+        "color": color,
         "fields": [{"title": subject if subject else "Message", "value": json.dumps(message) if type(message) is dict else message, "short": False}]
     }
 
@@ -132,21 +133,24 @@ def notify_slack(subject, message, region):
 
     if "AlarmName" in message:
         notification = cloudwatch_notification(message, region)
-        payload['text'] = "AWS CloudWatch notification - " + message["AlarmName"]
-        payload['attachments'].append(notification)
+        subject = "AWS CloudWatch notification - " + message["AlarmName"]
     elif "source" in message:
         if message['source'] == "aws.ec2" and message['detail-type'] == "EBS Snapshot Notification":
             notification = ebs_snapshot_notification(message, region)
-            payload['text'] = message["detail-type"]
-            payload['attachments'].append(notification)
+            subject = message["detail-type"]
         elif message['source'] == "aws.dlm":
             notification = dlm_notification(message, region)
-            payload['text'] = "DLM Policy State Change"
-            payload['attachments'].append(notification)
+            subject = "DLM Policy State Change"
     else:
-        payload['text'] = "AWS notification"
-        payload['attachments'].append(default_notification(subject, message))
+        color = "default"
+        if "alert" in subject:
+            color = "danger"
+        notification = default_notification(subject, message, color)
+        subject = "AWS notification"
 
+    payload['text'] = subject
+    payload['attachments'].append(notification)
+    
     data = urllib.parse.urlencode({"payload": json.dumps(payload)}).encode("utf-8")
     req = urllib.request.Request(slack_url)
 
