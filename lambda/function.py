@@ -74,7 +74,7 @@ def ec2_state_change_notification(message, region):
         "fallback": "EC2 Instance {} is {}".format(message['detail']['instance-id'], message['detail']['state']),
         "fields": [
             { "title": "Instance", "value": message['detail']['instance-id'], "short": True },
-            { "title": "State", "value": message['detail']['state'], "short": False },
+            { "title": "State", "value": message['detail']['state'], "short": True },
             {
                 "title": "Link to Instance",
                 "value": "https://console.aws.amazon.com/ec2/v2/home?region=" + region + "#Instances:instanceId=" + urllib.parse.quote(message['detail']['instance-id']),
