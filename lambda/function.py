@@ -66,6 +66,22 @@ def ebs_snapshot_notification(message, region):
         ]
     }
 
+def ec2_state_change_notification(message, region):
+    states = {'running': 'good', 'pending': 'warning', 'stopping': 'danger', 'stopped': 'danger'}
+
+    return {
+        "color": states[message['detail']['state']],
+        "fallback": "EC2 Instance {} is {}".format(message['detail']['instance-id'], message['detail']['state']),
+        "fields": [
+            { "title": "Instance", "value": message['detail']['instance-id'], "short": True },
+            { "title": "State", "value": message['detail']['state'], "short": False },
+            {
+                "title": "Link to Instance",
+                "value": "https://console.aws.amazon.com/ec2/v2/home?region=" + region + "#Instances:instanceId=" + urllib.parse.quote(message['detail']['instance-id']),
+                "short": False
+            }
+        ]
+    }
 
 def dlm_notification(message, region):
     states = {'OK': 'good', 'notification': 'warning', 'ERROR': 'danger'}
@@ -131,16 +147,19 @@ def notify_slack(subject, message, region):
         except json.JSONDecodeError as err:
             logger.exception(f'JSON decode error: {err}')
 
+    if subject is None:
+        subject = message["detail-type"]
+
     if "AlarmName" in message:
         notification = cloudwatch_notification(message, region)
         subject = "AWS CloudWatch notification - " + message["AlarmName"]
-    elif "source" in message:
-        if message['source'] == "aws.ec2" and message['detail-type'] == "EBS Snapshot Notification":
-            notification = ebs_snapshot_notification(message, region)
-            subject = message["detail-type"]
-        elif message['source'] == "aws.dlm":
-            notification = dlm_notification(message, region)
-            subject = "DLM Policy State Change"
+    elif message['detail-type'] == "EBS Snapshot Notification":
+        notification = ebs_snapshot_notification(message, region)
+    elif message['detail-type'] == "EC2 Instance State-change Notification":
+        notification = ec2_state_change_notification(message, region)
+    elif message['source'] == "aws.dlm":
+        notification = dlm_notification(message, region)
+        subject = "DLM Policy State Change"
     else:
         color = "default"
         if "alert" in subject:
