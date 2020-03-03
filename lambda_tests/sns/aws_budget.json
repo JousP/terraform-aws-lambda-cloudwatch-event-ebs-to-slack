@@ -1,0 +1,22 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:<region>:<account>:<topic>:<subid>",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "xxxxxxxx-xxxxx-xxxx-xxxx-xxxxxxxxxx",
+        "TopicArn": "arn:aws:sns:<region>:<account>:<topic>",
+        "Subject": "AWS Budgets: Global Cost has exceeded your alert threshold",
+        "Message": "AWS Budget Notification <Date>\nAWS Account <account_id>\n\nDear AWS Customer,\n\nYou requested that we alert you when the <notification_type> <budget_type> associated with your <name> budget is <comparison_operator> <limit_amount> for the current <time_unit>. The <notification_type> <budget_type> associated with this budget is <value>. You can find additional details below and by accessing the AWS Budgets dashboard [1].\n\nBudget Name: <name>\nBudget Type: <budget_type>\nBudgeted Amount: <limit_amount>\nAlert Type: <notification_type>\nAlert Threshold: <comparison_operator> <limit_amount>\nACTUAL Amount: <value>\n\n[1] https://console.aws.amazon.com/billing/home#/budgets\n",
+        "Timestamp": "2020-02-19T15:29:45.938Z",
+        "SignatureVersion": "1",
+        "Signature": "xxx",
+        "SigningCertUrl": "https://cert.pem",
+        "UnsubscribeUrl": "https://url",
+        "MessageAttributes": {}
+      }
+    }
+  ]
+}

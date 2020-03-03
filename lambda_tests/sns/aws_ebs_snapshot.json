@@ -1,0 +1,18 @@
+{
+    "EventSource": "aws:sns",
+    "EventVersion": "1.0",
+    "EventSubscriptionArn": "arn:aws:sns:eu-north-1:669498998500:akiros-corporate-production-eu-north-1-Notifications:fc1b4047-b2aa-49c5-bef1-579f77b1e3a3",
+    "Sns": {
+        "Type": "Notification",
+        "MessageId": "74d82c41-e8d5-520f-a2d6-7a8e236869f6",
+        "TopicArn": "arn:aws:sns:eu-north-1:669498998500:akiros-corporate-production-eu-north-1-Notifications",
+        "Subject": null,
+        "Message": "{\"version\":\"0\",\"id\":\"e7d221e6-fb69-36fa-73ba-abd1f66faf0c\",\"detail-type\":\"EBS Snapshot Notification\",\"source\":\"aws.ec2\",\"account\":\"669498998500\",\"time\":\"2020-02-26T01:27:25Z\",\"region\":\"eu-north-1\",\"resources\":[\"arn:aws:ec2::eu-north-1:snapshot/snap-09b6c56c824ff9abb\"],\"detail\":{\"event\":\"createSnapshot\",\"result\":\"succeeded\",\"cause\":\"\",\"request-id\":\"\",\"snapshot_id\":\"arn:aws:ec2::eu-north-1:snapshot/snap-09b6c56c824ff9abb\",\"source\":\"arn:aws:ec2::eu-north-1:volume/vol-014bae347df49eae5\",\"startTime\":\"2020-02-26T01:25:42.571Z\",\"endTime\":\"2020-02-26T01:27:24.998Z\"}}",
+        "Timestamp": "2020-02-26T01:27:25.557Z",
+        "SignatureVersion": "1",
+        "Signature": "BsYrwZ9Qw4Uc9I5lqjJ1JclICHWeUcx5+xd7/hK3Dt6PSH7bptlT3l5luZVvlL9PRnmMczEUULfHy5XN3T+m9QpVxJQ+FF3XZOHnZjEUijLkP0TEVxA5L2/uYKBBqHGD8QGysDUslfjzw/w15HO+Ki+scffRyfkalT3rSErKBiON2XQjrDPUSVQoCpIDuJ17+JfgjIc95imeANXdJrkeTBZtGLkuqXs0IE9k9wcmM7lpSrxR8dXAeegyuMrDHLsT60YT3MAl+c/M3Hovvv/lBqtDWFo0YpET43h0/9kAtCC/mkfc7FAmVuQPAUsDCEsL24Ep072xqC4ZyhsB+jVYgg==",
+        "SigningCertUrl": "https://sns.eu-north-1.amazonaws.com/SimpleNotificationService-a86cb10b4e1f29c941702d737128f7b6.pem",
+        "UnsubscribeUrl": "https://sns.eu-north-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-north-1:669498998500:akiros-corporate-production-eu-north-1-Notifications:fc1b4047-b2aa-49c5-bef1-579f77b1e3a3",
+        "MessageAttributes": {}
+    }
+}

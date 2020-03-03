@@ -1,0 +1,18 @@
+{
+    "EventSource": "aws:sns",
+    "EventVersion": "1.0",
+    "EventSubscriptionArn": "arn:aws:sns:eu-north-1:669498998500:akiros-corporate-production-eu-north-1-Notifications:ddd0fd67-7d25-4f4b-b44b-b8bb54a7781c",
+    "Sns": {
+        "Type": "Notification",
+        "MessageId": "8715eff5-37a4-574b-9938-b925860acede",
+        "TopicArn": "arn:aws:sns:eu-north-1:669498998500:akiros-corporate-production-eu-north-1-Notifications",
+        "Subject": null,
+        "Message": "{\"version\":\"0\",\"id\":\"c11a9759-2d9c-965a-6987-d506134a8f59\",\"detail-type\":\"AWS API Call via CloudTrail\",\"source\":\"aws.dlm\",\"account\":\"669498998500\",\"time\":\"2020-02-26T17:48:21Z\",\"region\":\"eu-north-1\",\"resources\":[],\"detail\":{\"eventVersion\":\"1.05\",\"userIdentity\":{\"type\":\"AssumedRole\",\"principalId\":\"AROAZXYJ773SE6Q5CHBLQ:jous@akiros.io\",\"arn\":\"arn:aws:sts::669498998500:assumed-role/AWSReservedSSO_AWSAdministratorAccess_bb55b59be0d65245/jous@akiros.io\",\"accountId\":\"669498998500\",\"accessKeyId\":\"ASIAZXYJ773SBGSYDZXT\",\"sessionContext\":{\"sessionIssuer\":{\"type\":\"Role\",\"principalId\":\"AROAZXYJ773SE6Q5CHBLQ\",\"arn\":\"arn:aws:iam::669498998500:role/aws-reserved/sso.amazonaws.com/eu-west-1/AWSReservedSSO_AWSAdministratorAccess_bb55b59be0d65245\",\"accountId\":\"669498998500\",\"userName\":\"AWSReservedSSO_AWSAdministratorAccess_bb55b59be0d65245\"},\"webIdFederationData\":{},\"attributes\":{\"mfaAuthenticated\":\"false\",\"creationDate\":\"2020-02-26T12:15:16Z\"}}},\"eventTime\":\"2020-02-26T17:48:21Z\",\"eventSource\":\"dlm.amazonaws.com\",\"eventName\":\"UpdateLifecyclePolicy\",\"sourceIPAddress\":\"86.213.133.250\",\"userAgent\":\"aws-sdk-go/1.28.8 (go1.13.5; darwin; amd64) APN/1.0 HashiCorp/1.0 Terraform/0.12.20 (+https://www.terraform.io)\",\"requestParameters\":{\"policyId\":\"policy-0ead9057f11ce5104\",\"PolicyDetails\":{\"ResourceTypes\":[\"VOLUME\"],\"Schedules\":[{\"CopyTags\":true,\"CreateRule\":{\"Interval\":24,\"IntervalUnit\":\"HOURS\",\"Times\":[\"02:00\"]},\"Name\":\"5 days of daily snapshots\",\"RetainRule\":{\"Count\":5},\"TagsToAdd\":[{\"Key\":\"SnapshotCreator\",\"Value\":\"DLM\"}]}],\"TargetTags\":[{\"Key\":\"Snapshot\",\"Value\":\"true\"}]}},\"responseElements\":null,\"requestID\":\"966aea43-e0b6-4458-b477-a73ce28b3615\",\"eventID\":\"2784aa58-0fac-4aa7-9740-dcb8ff6da271\",\"readOnly\":false,\"eventType\":\"AwsApiCall\"}}",
+        "Timestamp": "2020-02-26T17:48:30.824Z",
+        "SignatureVersion": "1",
+        "Signature": "ZOlWP9vdQg3FBIHO+QbOBPjtT1NqHDSFjWapyJhQ2F2VBlOrihYGOW2N2a0veVBh7N+br+2Ooy8/MpnZ3MKJeNscEJxxvmDeyfKWxfeCyrSNmJctRH4sOxAI2jILrJsqTLIZulhg0ZgzeZYCs3wP5zFzJOqkOGwXYTiFK0cer42dFoIyZuDPUDpUkoWiyER/3QgUnmKHoOngwd71PrwUL67LXRvHjHW4X6EkC4fAMGLAiEJIzyHggpoVUm5wYXU3RjwsPxBADEEX0pwyhz4sFhenw5ew5EUBUdpLU5HfsfMiWqSSftGAIPemM1vnot7WMuC2dxgKP+FrY3HCmKXykQ==",
+        "SigningCertUrl": "https://sns.eu-north-1.amazonaws.com/SimpleNotificationService-a86cb10b4e1f29c941702d737128f7b6.pem",
+        "UnsubscribeUrl": "https://sns.eu-north-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-north-1:669498998500:akiros-corporate-production-eu-north-1-Notifications:ddd0fd67-7d25-4f4b-b44b-b8bb54a7781c",
+        "MessageAttributes": {}
+    }
+}
