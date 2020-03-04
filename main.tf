@@ -88,7 +88,7 @@ resource "aws_lambda_function" "main" {
     }
   }
   lifecycle {
-    ignore_changes               = [last_modified, filename]
+    ignore_changes               = [last_modified]
   }
 }
 
