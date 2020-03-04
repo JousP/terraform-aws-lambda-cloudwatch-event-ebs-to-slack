@@ -16,7 +16,6 @@ resource "aws_iam_role" "lambda" {
     ]
   }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_role" {

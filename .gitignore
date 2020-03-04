@@ -7,3 +7,6 @@
 
 # tfenv files
 *.terraform-version
+
+# Generated files
+lambda/function.zip

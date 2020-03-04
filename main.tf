@@ -43,51 +43,100 @@ data "archive_file" "function_filename" {
   output_path = data.null_data_source.function_archive.outputs.filename
 }
 
-module "function" {
-  source                               = "JousP/lambda-function/aws"
-  version                              = "~> 2.0"
-  enabled                              = var.enabled
-  function_name                        = var.function_name
-  role                                 = local.role
-  description                          = var.description
-  dead_letter_config                   = var.dead_letter_config
-  filename                             = data.archive_file.function_filename.output_path
-  handler                              = "function.lambda_handler"
-  memory_size                          = var.memory_size
-  runtime                              = "python3.7"
-  timeout                              = var.timeout
-  reserved_concurrent_executions       = var.reserved_concurrent_executions
-  publish                              = var.publish
-  vpc_config                           = var.vpc_config
-  environment                          = {
-    variables                          = {
-    SLACK_WEBHOOK_URL                  = var.slack_webhook_url
-    SLACK_CHANNEL                      = var.slack_channel
-    SLACK_USERNAME                     = var.slack_username
-    SLACK_EMOJI                        = var.slack_emoji
-    LOG_EVENTS                         = var.log_events ? "True" : "False"
+# Create the Lambda Function
+resource "aws_lambda_function" "main" {
+  count                          = var.enabled ? 1 : 0
+  filename                       = data.archive_file.function_filename.output_path
+  function_name                  = var.function_name
+  handler                        = "function.lambda_handler"
+  role                           = local.role
+  description                    = var.description
+  memory_size                    = var.memory_size
+  runtime                        = "python3.7"
+  timeout                        = var.timeout
+  reserved_concurrent_executions = var.reserved_concurrent_executions
+  publish                        = var.publish
+  kms_key_arn                    = var.kms_key_arn
+  source_code_hash               = data.archive_file.function_filename.output_base64sha256
+  tags                           = merge(var.tags, var.function_tags)
+  environment {
+    variables           = {
+      SLACK_WEBHOOK_URL = var.slack_webhook_url
+      SLACK_CHANNEL     = var.slack_channel
+      SLACK_USERNAME    = var.slack_username
+      SLACK_EMOJI       = var.slack_emoji
+      LOG_EVENTS        = var.log_events ? "True" : "False"
     }
   }
-  kms_key_arn                          = var.kms_key_arn
-  tracing_config                       = var.tracing_config
-  source_code_hash                     = data.archive_file.function_filename.output_base64sha256
-  permission_principal                 = var.permission_principal
-  permission_action                    = var.permission_action
-  permission_event_source_token        = var.permission_event_source_token
-  permission_source_account            = var.permission_source_account
-  permission_source_arn                = var.permission_source_arn
-  permission_statement_id              = var.permission_statement_id
-  permission_statement_id_prefix       = var.permission_statement_id_prefix
-  log_group_retention_in_days          = var.log_group_retention_in_days
-  tags                                 = merge(var.tags, var.function_tags)
-  create_alias                         = var.create_alias
-  alias_name                           = var.alias_name
-  alias_function_version               = var.alias_function_version
-  alias_permission_action              = var.alias_permission_action
-  alias_permission_event_source_token  = var.alias_permission_event_source_token
-  alias_permission_principal           = var.alias_permission_principal
-  alias_permission_source_account      = var.alias_permission_source_account
-  alias_permission_source_arn          = var.alias_permission_source_arn
-  alias_permission_statement_id        = var.alias_permission_statement_id
-  alias_permission_statement_id_prefix = var.alias_permission_statement_id_prefix
+  dynamic "dead_letter_config" {
+    for_each     = var.dead_letter_config == null ? [] : [var.dead_letter_config]
+    content {
+      target_arn = lookup(dead_letter_config.value, "target_arn", null)
+    }
+  }
+  dynamic "vpc_config" {
+    for_each             = var.vpc_config == null ? [] : [var.vpc_config]
+    content {
+      subnet_ids         = vpc_config.value.subnet_ids
+      security_group_ids = vpc_config.value.security_group_ids
+    }
+  }
+  dynamic "tracing_config" {
+    for_each = var.tracing_config == null ? [] : [var.tracing_config]
+    content {
+      mode   = tracing_config.value.mode
+    }
+  }
+  lifecycle {
+    ignore_changes               = [last_modified, filename]
+  }
+}
+
+# Creates a Lambda function alias.
+resource "aws_lambda_alias" "main" {
+  count            = var.enabled && var.create_alias ? 1 : 0
+  name             = var.alias_name
+  description      = "${var.function_name} ${var.alias_name} version"
+  function_name    = aws_lambda_function.main[0].arn
+  function_version = var.alias_function_version
+}
+
+# Allow `permission_principal` to Trigger Lambda Execution
+locals {
+  id            = "${var.function_name}_${element(split(".", var.permission_principal), 0)}"
+  permission_sid = var.permission_statement_id != null ? var.permission_statement_id : var.permission_statement_id_prefix != null ? var.permission_statement_id : local.id
+  alias_id  = "${var.function_name}_${element(split(".", var.alias_permission_principal), 0)}"
+  alias_permission_sid = var.alias_permission_statement_id != null ? var.alias_permission_statement_id : var.alias_permission_statement_id_prefix != null ? var.alias_permission_statement_id : local.alias_id
+}
+
+resource "aws_lambda_permission" "main" {
+  count               = var.enabled && var.permission_principal != "" ? 1 : 0
+  function_name       = aws_lambda_function.main[0].arn
+  action              = var.permission_action
+  event_source_token  = var.permission_event_source_token
+  principal           = var.permission_principal
+  source_arn          = var.permission_source_arn
+  statement_id        = local.permission_sid
+  statement_id_prefix = var.permission_statement_id_prefix
+}
+
+resource "aws_lambda_permission" "alias" {
+  count               = var.enabled && var.create_alias && var.alias_permission_principal != "" ? 1 : 0
+  function_name       = aws_lambda_function.main[0].id
+  action              = var.alias_permission_action
+  event_source_token  = var.permission_event_source_token
+  principal           = var.alias_permission_principal
+  qualifier           = var.alias_name
+  source_arn          = var.alias_permission_source_arn
+  statement_id        = local.alias_permission_sid
+  statement_id_prefix = var.alias_permission_statement_id_prefix
+  depends_on          = [aws_lambda_alias.main]
+}
+
+# Lambda functions automaticly logs... place some retention policy
+resource "aws_cloudwatch_log_group" "lambda" {
+  count             = var.enabled ? 1 : 0
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = var.log_group_retention_in_days
+  tags              = merge(var.tags, var.function_tags)
 }

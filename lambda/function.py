@@ -18,10 +18,18 @@ def decrypt(encrypted_url):
     except Exception:
         logger.exception("Failed to decrypt URL with KMS")
 
+def ec2_get_instance_name(iid):
+    region = os.environ['AWS_REGION']
+    ec2 = boto3.resource('ec2', region_name=region)
+    instance = ec2.Instance(iid)
+    instancename = iid
+    for tags in instance.tags:
+        if tags["Key"] == 'Name':
+            instancename = tags["Value"]
+    return instancename
 
 def cloudwatch_notification(message, region):
     states = {'OK': 'good', 'INSUFFICIENT_DATA': 'warning', 'ALARM': 'danger'}
-
     return {
         "color": states[message['NewStateValue']],
         "fallback": "Alarm {} triggered".format(message['AlarmName']),
@@ -39,10 +47,8 @@ def cloudwatch_notification(message, region):
         ]
     }
 
-
 def ebs_snapshot_notification(message, region):
     states = {'succeeded': 'good', 'failed': 'danger'}
-
     volume_id = re.search("arn:aws:ec2::\S+:volume/vol-(\w+)", message['detail']['source'])[1]
     snap_id = re.search("arn:aws:ec2::\S+:snapshot/snap-(\w+)", message['detail']['snapshot_id'])[1]
     return {
@@ -68,12 +74,12 @@ def ebs_snapshot_notification(message, region):
 
 def ec2_state_change_notification(message, region):
     states = {'running': 'good', 'pending': 'warning', 'stopping': 'danger', 'stopped': 'danger'}
-
+    instance = ec2_get_instance_name(message['detail']['instance-id'])
     return {
         "color": states[message['detail']['state']],
-        "fallback": "EC2 Instance {} is {}".format(message['detail']['instance-id'], message['detail']['state']),
+        "fallback": "EC2 Instance {} is {}".format(instance, message['detail']['state']),
         "fields": [
-            { "title": "Instance", "value": message['detail']['instance-id'], "short": True },
+            { "title": "Instance", "value": instance, "short": True },
             { "title": "State", "value": message['detail']['state'], "short": True },
             {
                 "title": "Link to Instance",
