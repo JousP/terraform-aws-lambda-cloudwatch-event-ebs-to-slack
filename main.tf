@@ -6,6 +6,17 @@ locals {
   role               = var.role == null ? module.role.arn : var.role
 }
 
+data "aws_iam_policy_document" "role" {
+  statement {
+    sid = "EC2DescribeTags"
+    actions = [
+      "ec2:DescribeInstances",
+      "ec2:DescribeTags"
+    ]
+    resources = ["*"]
+  }
+}
+
 module "role" {
   source                = "JousP/iam-assumeRole/aws"
   version               = "~> 2.1.0"
@@ -20,8 +31,8 @@ module "role" {
   tags                  = merge(var.tags, var.role_tags)
   policies_count        = var.role_policies_count
   policies              = var.role_policies
-  json_policies_count   = var.role_json_policies_count
-  json_policies         = var.role_json_policies
+  json_policies_count   = var.role_json_policies_count + 1
+  json_policies         = concat([data.aws_iam_policy_document.role.json], var.role_json_policies)
   service_identifiers   = ["lambda.amazonaws.com"]
 }
 
