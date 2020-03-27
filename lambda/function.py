@@ -73,7 +73,7 @@ def ebs_snapshot_notification(message, region):
     }
 
 def ec2_state_change_notification(message, region):
-    states = {'running': 'good', 'pending': 'warning', 'stopping': 'danger', 'stopped': 'danger'}
+    states = {'running': 'good', 'pending': 'warning', 'stopping': 'danger', 'stopped': 'danger', 'shutting-down' : 'danger', 'terminated' : 'danger'}
     instance = ec2_get_instance_name(message['detail']['instance-id'])
     return {
         "color": states[message['detail']['state']],
