@@ -23,9 +23,10 @@ def ec2_get_instance_name(iid):
     ec2 = boto3.resource('ec2', region_name=region)
     instance = ec2.Instance(iid)
     instancename = iid
-    for tags in instance.tags:
-        if tags["Key"] == 'Name':
-            instancename = tags["Value"]
+    if instance.tags != None:
+        for tags in instance.tags:
+            if tags["Key"] == 'Name':
+                instancename = tags["Value"]
     return instancename
 
 def cloudwatch_notification(message, region):
