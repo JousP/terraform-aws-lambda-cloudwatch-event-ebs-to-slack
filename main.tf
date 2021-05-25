@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "role" {
 
 module "role" {
   source                = "JousP/iam-assumeRole/aws"
-  version               = "~> 2.1.0"
+  version               = "~> 3.0.0"
   enabled               = var.create_role
   name                  = local.default["role_name"]
   description           = local.default["role_description"]
