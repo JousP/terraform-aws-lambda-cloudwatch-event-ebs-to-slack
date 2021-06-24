@@ -1,0 +1,22 @@
+{
+    "Records": [
+        {
+            "EventSource": "aws:sns",
+            "EventVersion": "1.0",
+            "EventSubscriptionArn": "arn:aws:sns:<region>:<account>:<topic>:<subid>",
+            "Sns": {
+                "Type": "Notification",
+                "MessageId": "xxxxxxxx-xxxxx-xxxx-xxxx-xxxxxxxxxx",
+                "TopicArn": "arn:aws:sns:<region>:<account>:<topic>",
+                "Subject": null,
+                "Message": "{\"version\":\"0\",\"id\":\"08bd62ad-f35e-f75e-5c8b-1df639aff804\",\"detail-type\":\"EC2 Instance State-change Notification\",\"source\":\"aws.ec2\",\"account\":\"669498998500\",\"time\":\"2020-02-26T15:45:09Z\",\"region\":\"eu-north-1\",\"resources\":[\"arn:aws:ec2:eu-north-1:669498998500:instance/i-02a05f24c9f06b54c\"],\"detail\":{\"instance-id\":\"i-02a05f24c9f06b54c\",\"state\":\"stopping\"}}",
+                "Timestamp": "2020-02-26T15:45:10.271Z",
+                "SignatureVersion": "1",
+                "Signature": "NJdw9Xq61reVvAKa42XoLdeo7R5HiPAFh0WVlPX8pquEu+g9zYmw5Erw6zz/xk3vA8b4MGkbIPUcXpq6paCOUiNflwXtGyeZt82EX0DK4aH8g2sUR6ihi1Kh7RkfrAeR9FlQqHN7dizM9Huj8IcagbV8ypVPtx7qtzBUYVwTeOIJR9cKIoOF40CTQZssV8ZsmUY2/on5MFa1J81T6IWYBke2FZXpnbJMfaQQW0IO72TQQyTJGzBvTKvPmh0FgGQikwimMeACqy+I1C3aLyNIkAH9hWt7M/Wai3DtSPQ0xlBEQT8aPadbSb4NsH9kVihRObxs7Q3ZToWEzbw79N1bwQ==",
+                "SigningCertUrl": "https://sns.eu-north-1.amazonaws.com/SimpleNotificationService-a86cb10b4e1f29c941702d737128f7b6.pem",
+                "UnsubscribeUrl": "https://sns.eu-north-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-north-1:669498998500:akiros-corporate-production-eu-north-1-Notifications:fc1b4047-b2aa-49c5-bef1-579f77b1e3a3",
+                "MessageAttributes": {}
+            }
+        }
+    ]
+}
