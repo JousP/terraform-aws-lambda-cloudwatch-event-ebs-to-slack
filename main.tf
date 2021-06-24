@@ -1,9 +1,8 @@
 locals {
-  default            = {
-    role_name        = var.role_name == "" ? "role_${var.function_name}" : var.role_name
-    role_description = var.role_description == "" ? "Role for lambda function ${var.function_name}" : var.role_description
+  default = {
+    role_name        = var.role_name == null && var.role_name_prefix == null ? "role_${var.function_name}" : var.role_name
+    role_description = var.role_description == null ? "Role for lambda function ${var.function_name}" : var.role_description
   }
-  role               = var.role == null ? module.role.arn : var.role
 }
 
 data "aws_iam_policy_document" "role" {
@@ -19,59 +18,59 @@ data "aws_iam_policy_document" "role" {
 
 module "role" {
   source                = "JousP/iam-assumeRole/aws"
-  version               = "~> 3.0.0"
-  enabled               = var.create_role
-  name                  = local.default["role_name"]
-  description           = local.default["role_description"]
+  version               = "~> 3.2"
+  count                 = var.create_role == true ? 1 : 0
   assume_role_policy    = var.role_assume_role_policy
+  description           = local.default["role_description"]
   force_detach_policies = var.role_force_detach_policies
-  path                  = var.role_path
+  inline_policy         = var.role_inline_policy
+  managed_policy_arns   = var.role_managed_policy_arns
   max_session_duration  = var.role_max_session_duration
+  name                  = local.default["role_name"]
+  name_prefix           = var.role_name_prefix
+  path                  = var.role_path
   permissions_boundary  = var.role_permissions_boundary
   tags                  = merge(var.tags, var.role_tags)
   policies_count        = var.role_policies_count
   policies              = var.role_policies
   json_policies_count   = var.role_json_policies_count + 1
   json_policies         = concat([data.aws_iam_policy_document.role.json], var.role_json_policies)
-  service_identifiers   = ["lambda.amazonaws.com"]
+  service_identifiers   = concat(["lambda.amazonaws.com"], var.role_service_identifiers)
 }
 
-data "null_data_source" "function_file" {
-  inputs = {
-    filename = "${path.module}/lambda/function.py"
-  }
-}
-
-data "null_data_source" "function_archive" {
-  inputs = {
-    filename = "${path.module}/lambda/function.zip"
-  }
+locals {
+  lambda_prefix              = join("/", [path.module, "lambda", "function"])
+  lambda_archive_source_file = join(".", [local.lambda_prefix, "py"])
+  lambda_archive_output_path = join(".", [local.lambda_prefix, "zip"])
 }
 
 data "archive_file" "function_filename" {
   type        = "zip"
-  source_file = data.null_data_source.function_file.outputs.filename
-  output_path = data.null_data_source.function_archive.outputs.filename
+  source_file = local.lambda_archive_source_file
+  output_path = local.lambda_archive_output_path
 }
 
 # Create the Lambda Function
-resource "aws_lambda_function" "main" {
-  count                          = var.enabled ? 1 : 0
-  filename                       = data.archive_file.function_filename.output_path
+module "function" {
+  source                         = "JousP/lambda-function/aws"
+  version                        = "~> 3.1"
   function_name                  = var.function_name
-  handler                        = "function.lambda_handler"
-  role                           = local.role
+  role                           = var.role == null ? module.role[0].arn : var.role
+  code_signing_config_arn        = var.code_signing_config_arn
   description                    = var.description
-  memory_size                    = var.memory_size
-  runtime                        = "python3.7"
-  timeout                        = var.timeout
-  reserved_concurrent_executions = var.reserved_concurrent_executions
-  publish                        = var.publish
+  filename                       = data.archive_file.function_filename.output_path
+  handler                        = "function.lambda_handler"
   kms_key_arn                    = var.kms_key_arn
+  memory_size                    = var.memory_size
+  package_type                   = "Zip"
+  publish                        = var.publish
+  reserved_concurrent_executions = var.reserved_concurrent_executions
+  runtime                        = "python3.7"
   source_code_hash               = data.archive_file.function_filename.output_base64sha256
-  tags                           = merge(var.tags, var.function_tags)
-  environment {
-    variables           = {
+  timeout                        = var.timeout
+  dead_letter_config             = var.dead_letter_config
+  environment = {
+    variables = {
       SLACK_WEBHOOK_URL = var.slack_webhook_url
       SLACK_CHANNEL     = var.slack_channel
       SLACK_USERNAME    = var.slack_username
@@ -79,75 +78,27 @@ resource "aws_lambda_function" "main" {
       LOG_EVENTS        = var.log_events ? "True" : "False"
     }
   }
-  dynamic "dead_letter_config" {
-    for_each     = var.dead_letter_config == null ? [] : [var.dead_letter_config]
-    content {
-      target_arn = lookup(dead_letter_config.value, "target_arn", null)
-    }
-  }
-  dynamic "vpc_config" {
-    for_each             = var.vpc_config == null ? [] : [var.vpc_config]
-    content {
-      subnet_ids         = vpc_config.value.subnet_ids
-      security_group_ids = vpc_config.value.security_group_ids
-    }
-  }
-  dynamic "tracing_config" {
-    for_each = var.tracing_config == null ? [] : [var.tracing_config]
-    content {
-      mode   = tracing_config.value.mode
-    }
-  }
-  lifecycle {
-    ignore_changes               = [last_modified]
-  }
-}
-
-# Creates a Lambda function alias.
-resource "aws_lambda_alias" "main" {
-  count            = var.enabled && var.create_alias ? 1 : 0
-  name             = var.alias_name
-  description      = "${var.function_name} ${var.alias_name} version"
-  function_name    = aws_lambda_function.main[0].arn
-  function_version = var.alias_function_version
-}
-
-# Allow `permission_principal` to Trigger Lambda Execution
-locals {
-  id            = "${var.function_name}_${element(split(".", var.permission_principal), 0)}"
-  permission_sid = var.permission_statement_id != null ? var.permission_statement_id : var.permission_statement_id_prefix != null ? var.permission_statement_id : local.id
-  alias_id  = "${var.function_name}_${element(split(".", var.alias_permission_principal), 0)}"
-  alias_permission_sid = var.alias_permission_statement_id != null ? var.alias_permission_statement_id : var.alias_permission_statement_id_prefix != null ? var.alias_permission_statement_id : local.alias_id
-}
-
-resource "aws_lambda_permission" "main" {
-  count               = var.enabled && var.permission_principal != "" ? 1 : 0
-  function_name       = aws_lambda_function.main[0].arn
-  action              = var.permission_action
-  event_source_token  = var.permission_event_source_token
-  principal           = var.permission_principal
-  source_arn          = var.permission_source_arn
-  statement_id        = local.permission_sid
-  statement_id_prefix = var.permission_statement_id_prefix
-}
-
-resource "aws_lambda_permission" "alias" {
-  count               = var.enabled && var.create_alias && var.alias_permission_principal != "" ? 1 : 0
-  function_name       = aws_lambda_function.main[0].id
-  action              = var.alias_permission_action
-  event_source_token  = var.permission_event_source_token
-  principal           = var.alias_permission_principal
-  qualifier           = var.alias_name
-  source_arn          = var.alias_permission_source_arn
-  statement_id        = local.alias_permission_sid
-  statement_id_prefix = var.alias_permission_statement_id_prefix
-  depends_on          = [aws_lambda_alias.main]
-}
-
-# Lambda functions automaticly logs... place some retention policy
-resource "aws_cloudwatch_log_group" "lambda" {
-  count             = var.enabled ? 1 : 0
-  name              = "/aws/lambda/${var.function_name}"
-  retention_in_days = var.log_group_retention_in_days
-  tags              = merge(var.tags, var.function_tags)
+  tracing_config                       = var.tracing_config
+  vpc_config                           = var.vpc_config
+  alias_name                           = var.alias_name
+  alias_function_version               = var.alias_function_version
+  alias_routing_config                 = var.alias_routing_config
+  permission_action                    = var.permission_action
+  permission_event_source_token        = var.permission_event_source_token
+  permission_principal                 = var.permission_principal
+  permission_qualifier                 = var.permission_qualifier
+  permission_source_account            = var.permission_source_account
+  permission_source_arn                = var.permission_source_arn
+  permission_statement_id              = var.permission_statement_id
+  permission_statement_id_prefix       = var.permission_statement_id_prefix
+  alias_permission_action              = var.alias_permission_action
+  alias_permission_event_source_token  = var.alias_permission_event_source_token
+  alias_permission_principal           = var.alias_permission_principal
+  alias_permission_source_account      = var.alias_permission_source_account
+  alias_permission_source_arn          = var.alias_permission_source_arn
+  alias_permission_statement_id        = var.alias_permission_statement_id
+  alias_permission_statement_id_prefix = var.alias_permission_statement_id_prefix
+  log_group_retention_in_days          = var.log_group_retention_in_days
+  tags                                 = merge(var.tags, var.function_tags)
+  create_alias                         = var.create_alias
 }
