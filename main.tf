@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "role" {
 
 module "role" {
   source                = "JousP/iam-assumeRole/aws"
-  version               = "~> 3.2"
+  version               = "~> 3.3"
   count                 = var.create_role == true ? 1 : 0
   assume_role_policy    = var.role_assume_role_policy
   description           = local.default["role_description"]
@@ -53,7 +53,7 @@ data "archive_file" "function_filename" {
 # Create the Lambda Function
 module "function" {
   source                         = "JousP/lambda-function/aws"
-  version                        = "~> 3.1"
+  version                        = "~> 3.2"
   function_name                  = var.function_name
   role                           = var.role == null ? module.role[0].arn : var.role
   code_signing_config_arn        = var.code_signing_config_arn
