@@ -148,31 +148,35 @@ def notify_slack(subject, message, region):
         "icon_emoji": slack_emoji,
         "attachments": []
     }
+    color = "default"
+    if "alert" in subject:
+        color = "danger"
+    notification = default_notification(subject, message, color)
+
     if type(message) is str:
         try:
             message = json.loads(message)
         except json.JSONDecodeError as err:
             logger.exception(f'JSON decode error: {err}')
 
-    if subject is None:
-        subject = message["detail-type"]
-
-    if "AlarmName" in message:
-        notification = cloudwatch_notification(message, region)
-        subject = "AWS CloudWatch notification - " + message["AlarmName"]
-    elif message['detail-type'] == "EBS Snapshot Notification":
-        notification = ebs_snapshot_notification(message, region)
-    elif message['detail-type'] == "EC2 Instance State-change Notification":
-        notification = ec2_state_change_notification(message, region)
-    elif message['source'] == "aws.dlm":
-        notification = dlm_notification(message, region)
-        subject = "DLM Policy State Change"
+    if type(message) is str:
+        if "AlarmName" in message:
+            notification = cloudwatch_notification(message, region)
+            subject = "AWS CloudWatch notification - " + message["AlarmName"]
+        else:
+            subject = "AWS notification"
     else:
-        color = "default"
-        if "alert" in subject:
-            color = "danger"
-        notification = default_notification(subject, message, color)
-        subject = "AWS notification"
+        if subject is None:
+            subject = message["detail-type"]
+        if message['detail-type'] == "EBS Snapshot Notification":
+            notification = ebs_snapshot_notification(message, region)
+        elif message['detail-type'] == "EC2 Instance State-change Notification":
+            notification = ec2_state_change_notification(message, region)
+        elif message['source'] == "aws.dlm":
+            notification = dlm_notification(message, region)
+            subject = "DLM Policy State Change"
+        else:
+            subject = "AWS notification"
 
     payload['text'] = subject
     payload['attachments'].append(notification)
