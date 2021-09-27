@@ -14,6 +14,14 @@ data "aws_iam_policy_document" "role" {
     ]
     resources = ["*"]
   }
+  dynamic "statement" {
+    for_each = var.kms_key_arn != null ? { create_statement = true } : {}
+    content {
+      sid       = "AllowKMSDecrypt"
+      actions   = ["kms:Decrypt"]
+      resources = [var.kms_key_arn]
+    }
+  }
 }
 
 module "role" {
